@@ -8,3 +8,8 @@ Creating an Expo project using the blank template.
 
 √ Downloaded and extracted project files.
 > npm install
+
+2.Backend added online
+
+https://userloginapi.onrender.com/users
+https://deezerapi2.onrender.com/api/top-radio-stations
