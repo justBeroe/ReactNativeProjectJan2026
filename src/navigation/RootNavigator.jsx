@@ -1,9 +1,11 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import HomeNavigator from "./HomeNavigator";
-import CartScreen from "../screens/CartScreen";
 import InfoScreen from "../screens/InfoScreen";
 import { Ionicons } from "@expo/vector-icons";
+import { SongBoard} from "../screens/SongBoard";
+import { SongBoard2 } from "../screens/SongBoard2";
+
 
 export default function RootNavigator() {
     const Tabs = createBottomTabNavigator();
@@ -15,19 +17,27 @@ export default function RootNavigator() {
         >
             <Tabs.Screen
                 name="HomeTab"
-                component={HomeNavigator}
+                component={SongBoard2}
                 options={{
                     title: "Home",
                     tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
-                    headerShown: false
+                    headerShown: true
                 }}
             />
 
             <Tabs.Screen
-                name="Cart"
-                component={CartScreen}
+                name="Song"
+                component={SongBoard}
                 options={{
-                    tabBarIcon: ({ color, size }) => <Ionicons name="cart" size={size} color={color} />,
+                    tabBarIcon: ({ color, size }) => <Ionicons name="musical-note-outline" size={size} color={color} />,
+                }}
+            />
+
+               <Tabs.Screen
+                name="Song2"
+                component={HomeNavigator}
+                options={{
+                    tabBarIcon: ({ color, size }) => <Ionicons name="musical-notes-outline" size={size} color={color} />,
                 }}
             />
 

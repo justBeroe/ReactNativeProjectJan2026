@@ -7,8 +7,8 @@ import {
   Image,
   StyleSheet,
   Alert,
+  Linking,
 } from "react-native";
-import { Audio } from "expo-av";
 import type { Song } from "../models/song.model";
 import {
   updateSong,
@@ -23,7 +23,7 @@ interface ThemeItemProps {
   onSongDeleted?: (songId: number) => void;
 }
 
-export const ThemeItem: React.FC<ThemeItemProps> = ({
+export const SongItem: React.FC<ThemeItemProps> = ({
   song,
   variant = "full",
   onSongUpdated,
@@ -32,36 +32,11 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({
   const [isEditMode, setIsEditMode] = useState(false);
   const [artistName, setArtistName] = useState(song.artist.name);
   const [albumTitle, setAlbumTitle] = useState(song.album.title);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
-  // 🔊 Audio controls
-  const playPreview = async () => {
-    if (!song.preview) return;
-
-    if (!sound) {
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: song.preview },
-        { shouldPlay: true },
-      );
-      setSound(newSound);
-      setIsPlaying(true);
-
-      newSound.setOnPlaybackStatusUpdate((status) => {
-        if ("didJustFinish" in status && status.didJustFinish) {
-          setIsPlaying(false);
-        }
-      });
-    } else {
-      await sound.playAsync();
-      setIsPlaying(true);
-    }
-  };
-
-  const pausePreview = async () => {
-    if (sound) {
-      await sound.pauseAsync();
-      setIsPlaying(false);
+  // 🔊 Open preview stream externally (same as RadioItem)
+  const openPreviewStream = () => {
+    if (song.preview) {
+      Linking.openURL(song.preview);
     }
   };
 
@@ -72,7 +47,7 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({
         album: { ...song.album, title: albumTitle },
       };
 
-      const updatedSong = await updateSong(song._id, updatedData);
+      await updateSong(song._id, updatedData);
 
       const freshSongs = await getSongsWithIDMongoDB(song.artist.id);
       const freshSong = freshSongs.find((s) => s._id === song._id);
@@ -114,13 +89,10 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({
           <Text>Artist: {song.artist.name}</Text>
           <Text>Album: {song.album.title}</Text>
 
-          {/* Audio Preview */}
+          {/* 🔊 Open stream externally */}
           {song.preview && (
             <View style={{ marginVertical: 10 }}>
-              <Button
-                title={isPlaying ? "Pause" : "Play"}
-                onPress={isPlaying ? pausePreview : playPreview}
-              />
+              <Button title="Open Preview Stream" onPress={openPreviewStream} />
             </View>
           )}
 
@@ -147,12 +119,14 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({
             onChangeText={setArtistName}
             style={styles.input}
           />
+
           <Text>Album Title:</Text>
           <TextInput
             value={albumTitle}
             onChangeText={setAlbumTitle}
             style={styles.input}
           />
+
           <View style={styles.buttons}>
             <Button title="Cancel" onPress={() => setIsEditMode(false)} />
             <Button title="Save" onPress={handleSave} />

@@ -8,7 +8,8 @@ import { featuredItems, getItemsByCategory } from '../data/menuItems';
 import Card from '../components/Card';
 import { categories } from '../data/categoriesData';
 import CategoryCard from '../components/CategoryCard';
-import { ThemeBoard } from "./ThemeBoard";
+import { SongBoard } from "./SongBoard";
+import { RadioBoard } from './RadioBoard';
 
 // 👇 type the navigation prop
 type HomeScreenNavigationProp =
@@ -55,7 +56,7 @@ export default function HomeScreen() {
           ))}
         </ScrollView> */}
 
-        <ThemeBoard />
+        <RadioBoard />
       </View>
 
       {/* Category Section */}
