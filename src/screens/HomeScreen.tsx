@@ -56,7 +56,7 @@ export default function HomeScreen() {
           ))}
         </ScrollView> */}
 
-        <RadioBoard />
+        
       </View>
 
       {/* Category Section */}

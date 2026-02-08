@@ -5,6 +5,7 @@ import InfoScreen from "../screens/InfoScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { SongBoard} from "../screens/SongBoard";
 import { SongBoard2 } from "../screens/SongBoard2";
+import { RadioBoard } from "../screens/RadioBoard";
 
 
 export default function RootNavigator() {
@@ -17,11 +18,11 @@ export default function RootNavigator() {
         >
             <Tabs.Screen
                 name="HomeTab"
-                component={SongBoard2}
+                component={HomeNavigator}
                 options={{
                     title: "Home",
                     tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
-                    headerShown: true
+                    headerShown: false
                 }}
             />
 
@@ -35,17 +36,17 @@ export default function RootNavigator() {
 
                <Tabs.Screen
                 name="Song2"
-                component={HomeNavigator}
+                component={SongBoard2}
                 options={{
                     tabBarIcon: ({ color, size }) => <Ionicons name="musical-notes-outline" size={size} color={color} />,
                 }}
             />
 
             <Tabs.Screen
-                name="Info"
-                component={InfoScreen}
+                name="Radio"
+                component={RadioBoard}
                 options={{
-                    tabBarIcon: ({ color, size }) => <Ionicons name="information-circle" size={size} color={color} />,
+                    tabBarIcon: ({ color, size }) => <Ionicons name="musical-note-outline" size={size} color={color} />,
                 }}
             />
         </Tabs.Navigator>
