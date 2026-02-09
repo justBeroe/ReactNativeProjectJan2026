@@ -6,6 +6,8 @@ import DetailsScreen from "../screens/DetailsScreen";
 import { SongBoard} from "../screens/SongBoard";
 import { SongBoard2 } from "../screens/SongBoard2";
 import { Text } from "react-native";
+import { RadioBoard } from "../screens/RadioBoard";
+import { LoginScreen } from "../screens/LoginScreen";
 
 export default function HomeNavigator() {
     const Stack = createNativeStackNavigator();
@@ -31,7 +33,25 @@ export default function HomeNavigator() {
 
             })}
             />
-            <Stack.Screen name="Song2" component={SongBoard2} />
+            
+            <Stack.Screen 
+            name="Song2" 
+            component={SongBoard2}
+              options={({ navigation }) => ({ title: "Song2",
+            headerRight: () => ( <Text style={{ marginRight: 12, color: "blue", fontSize: 16 }} 
+            onPress={() => navigation.navigate("Radio")} > Radio </Text> ),              
+
+            })}            
+
+            />
+
+            <Stack.Screen 
+            name="Radio" 
+            component={RadioBoard}
+            />
+
+
+            
         </Stack.Navigator>
     );
 }
