@@ -55,6 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const user = response.data;
 
       setCurrentUser(user);
+      console.log("AuthService set user:", user); // ⭐ correct place
       setIsLoggedIn(true);
 
       await AsyncStorage.setItem("currentUser", JSON.stringify(user));

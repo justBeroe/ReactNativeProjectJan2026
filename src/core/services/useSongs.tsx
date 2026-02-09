@@ -9,37 +9,52 @@ const apiUrl = 'https://deezerapi2.onrender.com/api/songs';
 const apiUrl2 = 'https://deezerapi2.onrender.com/api/songs2';
 
 /**
- * Hook to fetch songs. Mirrors Angular getSongs / getSongsWithID.
- * - If artistId is provided, triggers Deezer fetch then loads from MongoDB.
- * - If no artistId, triggers global Deezer fetch then loads all songs.
+ * Hook to fetch songs.
+ * - If artistId is provided → fetch Deezer for that artist, then load from DB.
+ * - If no artistId → fetch global Deezer, then load all songs.
  */
 export const useSongs = (artistId?: number) => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        if (artistId) {
-          // ✅ First trigger backend fetch, then get from DB
-          await axios.get(`${fetchDeezerUrl}?artistId=${artistId}`);
-          const res = await axios.get<Song[]>(`${apiUrl}?artistId=${artistId}`);
-          setSongs(res.data);
-        } else {
-          await axios.get(fetchDeezerUrl);
-          const res = await axios.get<Song[]>(apiUrl);
-          setSongs(res.data);
-        }
-      } catch (err) {
-        console.error('Error fetching songs', err);
-      } finally {
-        setLoading(false);
+  // ⭐ FIX: fetchSongs must be defined OUTSIDE useEffect
+  const fetchSongs = async () => {
+    try {
+      setLoading(true);
+
+      if (artistId) {
+        // Trigger backend fetch, then load from MongoDB
+        await axios.get(`${fetchDeezerUrl}?artistId=${artistId}`);
+        const res = await axios.get<Song[]>(`${apiUrl}?artistId=${artistId}`);
+        setSongs(res.data);
+      } else {
+        await axios.get(fetchDeezerUrl);
+        const res = await axios.get<Song[]>(apiUrl);
+        setSongs(res.data);
       }
-    };
+
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching songs', err);
+      setError('Failed to load songs');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load on mount + when artistId changes
+  useEffect(() => {
     fetchSongs();
   }, [artistId]);
 
-  return { songs, loading };
+  // ⭐ FIX: Proper return object
+  return {
+    songs,
+    loading,
+    error,
+    refetch: fetchSongs,
+  };
 };
 
 /**
@@ -62,16 +77,19 @@ export const getSongsWithID2 = async (artistId: number): Promise<Song2[]> => {
 /**
  * ✅ Update a song by ID
  */
-export const updateSong = async (songId: number, updatedData: Partial<Song>): Promise<Song> => {
+export const updateSong = async (
+  songId: number,
+  updatedData: Partial<Song>
+): Promise<Song> => {
   const res = await axios.put<Song>(`${apiUrl}/${songId}`, updatedData);
-  return res.data; // ✅ FIXED: return Song, not AxiosResponse
+  return res.data;
 };
 
 /**
  * ✅ Delete a song by ID
  */
 export const deleteSong = async (songId: number): Promise<void> => {
-  await axios.delete(`${apiUrl}/${songId}`); // ✅ FIXED: correct URL
+  await axios.delete(`${apiUrl}/${songId}`);
 };
 
 /**
