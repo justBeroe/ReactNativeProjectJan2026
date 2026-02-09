@@ -9,7 +9,7 @@ export const RadioBoard: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get<RadioStation[]>("https://deezerapi2.onrender.com/api/top-radio-stations")
+      .get<RadioStation[]>("http://62.73.121.31:4000/api/top-radio-stations")
       .then(response => setStations(response.data))
       .catch(err => {
         console.error("Error fetching radio stations", err);

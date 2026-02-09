@@ -3,10 +3,10 @@ import axios from 'axios';
 import type { Song } from '../../models/song.model';
 import type { Song2 } from '../../models/song2.model';
 
-const fetchDeezerUrl = 'https://deezerapi2.onrender.com/api/fetch-deezer';
-const fetchJamendoUrl = 'https://deezerapi2.onrender.com/api/fetch-jamendo';
-const apiUrl = 'https://deezerapi2.onrender.com/api/songs';
-const apiUrl2 = 'https://deezerapi2.onrender.com/api/songs2';
+const fetchDeezerUrl = 'http://62.73.121.31:4000/api/fetch-deezer';
+const fetchJamendoUrl = 'http://62.73.121.31:4000/api/fetch-jamendo';
+const apiUrl = 'http://62.73.121.31:4000/api/songs';
+const apiUrl2 = 'http://62.73.121.31:4000/api/songs2';
 
 /**
  * Hook to fetch songs.

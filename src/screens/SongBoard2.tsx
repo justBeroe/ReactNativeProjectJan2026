@@ -15,10 +15,10 @@ export const SongBoard2: React.FC = () => {
     const fetchSongs = async () => {
       try {
         // 🔥 KEEPING YOUR FETCH LOGIC
-        await axios.get("https://deezerapi2.onrender.com/api/fetch-jamendo");
+        await axios.get("http://62.73.121.31:4000/api/fetch-jamendo");
 
         const res = await axios.get<Song2[]>(
-          "https://deezerapi2.onrender.com/api/songs2"
+          "http://62.73.121.31:4000/api/songs2"
         );
 
         if (!res.data || res.data.length === 0) {
