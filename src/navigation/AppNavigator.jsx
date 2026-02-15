@@ -9,6 +9,7 @@ import { RadioBoard } from "../screens/RadioBoard";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import CameraScreen from "../screens/CameraScreen";
 
+
 export default function RootNavigator() {
   const Tabs = createBottomTabNavigator();
 

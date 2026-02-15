@@ -1,13 +1,14 @@
+// AuthService.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// -------------------- Types --------------------
 export interface User {
   id?: string;
   _id?: string;
   username: string;
   email: string;
+  pictureUpdatedAt?: number;
 }
 
 interface AuthContextType {
@@ -22,102 +23,98 @@ interface AuthContextType {
   ) => Promise<any>;
   logout: () => Promise<void>;
   updateUser: (user: User) => Promise<User>;
-  pictureVersion: number;          // ✅ added
-  refreshPicture: () => void;      // ✅ added
+  pictureVersion: number;
+  refreshPicture: () => void;
 }
 
-// -------------------- Context --------------------
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// -------------------- Provider --------------------
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const apiUrl = "http://62.73.121.31:5000";
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-  // ✅ Picture version state for refreshing profile images
   const [pictureVersion, setPictureVersion] = useState(0);
-  const refreshPicture = () => setPictureVersion((prev) => prev + 1);
 
-  // Load saved auth state
+  // ⭐ Load user from MongoDB on startup
   useEffect(() => {
     (async () => {
-      try {
-        const savedUser = await AsyncStorage.getItem("currentUser");
-        const savedLoggedIn = await AsyncStorage.getItem("isLoggedIn");
+      const savedId = await AsyncStorage.getItem("userId");
+      const savedLoggedIn = await AsyncStorage.getItem("isLoggedIn");
 
-        if (savedUser && savedLoggedIn === "true") {
-          setCurrentUser(JSON.parse(savedUser));
+      if (savedId && savedLoggedIn === "true") {
+        try {
+          const res = await axios.get<User>(`${apiUrl}/users/${savedId}`);
+          const user = res.data;
+
+          setCurrentUser(user);
           setIsLoggedIn(true);
+          setPictureVersion(user.pictureUpdatedAt || 0);
+        } catch (err) {
+          console.error("Failed to load user from MongoDB:", err);
         }
-      } catch (err) {
-        console.warn("Failed to load auth state:", err);
       }
     })();
   }, []);
 
-  // -------------------- Auth Functions --------------------
+  // ⭐ Login: save only userId, fetch full user from MongoDB
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await axios.post<User>(`${apiUrl}/loginin`, { email, password });
+      const response = await axios.post<User>(`${apiUrl}/loginin`, {
+        email,
+        password,
+      });
+
       const user = response.data;
+
+      await AsyncStorage.setItem("userId", user._id || user.id || "");
+      await AsyncStorage.setItem("isLoggedIn", "true");
 
       setCurrentUser(user);
       setIsLoggedIn(true);
-
-      await AsyncStorage.setItem("currentUser", JSON.stringify(user));
-      await AsyncStorage.setItem("isLoggedIn", "true");
+      setPictureVersion(user.pictureUpdatedAt || 0);
 
       return true;
-    } catch (err) {
-      console.error("Login failed:", err);
+    } catch {
       return false;
     }
   };
 
-  const registerInMongo = async (
-    username: string,
-    email: string,
-    password: string,
-    rePassword: string
-  ) => {
-    return axios.post(`${apiUrl}/registerin`, { username, email, password, rePassword });
+  const registerInMongo = async (username, email, password, rePassword) => {
+    return axios.post(`${apiUrl}/registerin`, {
+      username,
+      email,
+      password,
+      rePassword,
+    });
   };
 
   const logout = async () => {
+    await AsyncStorage.clear();
     setCurrentUser(null);
     setIsLoggedIn(false);
-    await AsyncStorage.removeItem("currentUser");
-    await AsyncStorage.removeItem("isLoggedIn");
-    setPictureVersion(0); // reset picture version
+    setPictureVersion(0);
   };
 
+  // ⭐ Update user: fetch fresh user from MongoDB
   const updateUser = async (user: User): Promise<User> => {
-    if (!user.id && !user._id) throw new Error("User ID is required");
     const userId = user.id || user._id;
 
-    try {
-      const response = await axios.put<User>(`${apiUrl}/users/${userId}`, {
-        username: user.username,
-        email: user.email,
-      });
+    await axios.put(`${apiUrl}/users/${userId}`, {
+      username: user.username,
+      email: user.email,
+    });
 
-      const updatedUser = response.data;
+    const refreshed = await axios.get<User>(`${apiUrl}/users/${userId}`);
 
-      setCurrentUser(updatedUser);
-      await AsyncStorage.setItem("currentUser", JSON.stringify(updatedUser));
-
-      return updatedUser;
-    } catch (err) {
-      console.error("Update failed:", err);
-      throw err;
-    }
+    setCurrentUser(refreshed.data);
+    return refreshed.data;
   };
 
-  // -------------------- Provide Context --------------------
+  const refreshPicture = () => {
+    setPictureVersion((prev) => prev + 1);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -127,8 +124,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         registerInMongo,
         logout,
         updateUser,
-        pictureVersion,     // ✅ provide
-        refreshPicture,     // ✅ provide
+        pictureVersion,
+        refreshPicture,
       }}
     >
       {children}
@@ -136,8 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// -------------------- Hook --------------------
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
