@@ -17,9 +17,10 @@ interface AuthContextType {
     username: string,
     email: string,
     password: string,
-    rePassword: string
+    rePassword: string,
   ) => Promise<any>;
   logout: () => Promise<void>;
+  updateUser: (user: User) => Promise<User>; // <-- add this
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -72,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     username: string,
     email: string,
     password: string,
-    rePassword: string
+    rePassword: string,
   ) => {
     return axios.post(`${apiUrl}/registerin`, {
       username,
@@ -92,6 +93,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log("Logout complete");
   };
 
+  const updateUser = async (user: User): Promise<User> => {
+    // Make sure either id or _id exists
+    if (!user.id && !user._id) throw new Error("User ID is required");
+
+    // Pick the ID to use
+    const userId = user.id || user._id;
+
+    try {
+      // Call your API to update user
+      const response = await axios.put<User>(`${apiUrl}/users/${userId}`, {
+        username: user.username,
+        email: user.email,
+      });
+
+      const updatedUser = response.data;
+
+      // Update local state and AsyncStorage
+      setCurrentUser(updatedUser);
+      await AsyncStorage.setItem("currentUser", JSON.stringify(updatedUser));
+
+      return updatedUser;
+    } catch (err) {
+      console.error("Update failed:", err);
+      throw err;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -100,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         registerInMongo,
         logout,
+        updateUser, // <-- add here
       }}
     >
       {children}
