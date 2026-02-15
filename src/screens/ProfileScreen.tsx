@@ -1,260 +1,172 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
+  Image,
+  ScrollView,
   Alert,
+  StyleSheet,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../core/services/AuthService";
 
 export function ProfileScreen() {
-  const { currentUser, updateUser } = useAuth() as any;
-
+  const { currentUser, updateUser, pictureVersion } = useAuth();
+  const [formValues, setFormValues] = useState({ username: "", email: "" });
   const [isEditMode, setIsEditMode] = useState(false);
-  const [formValues, setFormValues] = useState({
-    username: "",
-    email: "",
-  });
-  const [touched, setTouched] = useState({
-    username: false,
-    email: false,
-  });
+  const [serverPhoto, setServerPhoto] = useState<string | null>(null);
+
+  const SERVER_URL = "http://62.73.121.31:5000";
 
   useEffect(() => {
-    if (currentUser) {
-      setFormValues({
-        username: currentUser.username || "",
-        email: currentUser.email || "",
-      });
-    }
-  }, [currentUser]);
-
-  const handleEdit = () => {
-    // setIsEditMode(true);
-    // setTouched({ username: false, email: false });
-    console.log("Current user:", currentUser);
-
-    // 🔹 Fix: populate the form from currentUser at edit time
-    // setFormValues({
-    //   username: currentUser?.username || "",
-    //   email: currentUser?.email || "",
-    // });
-
-    if (!currentUser) {
-      console.warn("Cannot enter edit mode: currentUser not set yet");
-      return;
-    }
-    console.log("Editing user:", currentUser, "form before:", formValues);
+    if (!currentUser) return;
     setFormValues({
-      username: currentUser.username ?? "",
-      email: currentUser.email ?? "",
+      username: currentUser.username || "",
+      email: currentUser.email || "",
     });
-
-    setTouched({ username: false, email: false });
-    setIsEditMode(true);
-  };
-
-  const handleCancel = () => {
-    setIsEditMode(false);
-    setFormValues({
-      username: currentUser?.username || "",
-      email: currentUser?.email || "",
-    });
-  };
-
-  const handleBlur = (field: "username" | "email") => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-  };
-
-  const isUsernameInvalid = touched.username && !formValues.username.trim();
-  const isEmailInvalid = touched.email && !formValues.email.trim();
+    setServerPhoto(
+      `${SERVER_URL}/users/${currentUser._id || currentUser.id}/picture?time=${pictureVersion}`
+    );
+  }, [currentUser, pictureVersion]);
 
   const handleSave = async () => {
-    if (!formValues.username.trim() || !formValues.email.trim()) {
-      return;
-    }
-
-    const storedUser = await AsyncStorage.getItem("currentUser");
-
-    if (!storedUser) {
-      Alert.alert("Error", "User not found");
-      return;
-    }
-
-    const parsedUser = JSON.parse(storedUser);
-
-    const updatedUser = {
-      id: parsedUser.id || parsedUser._id,
-      username: formValues.username,
-      email: formValues.email,
-    };
-
+    if (!currentUser) return;
     try {
-      await updateUser(updatedUser);
+      await updateUser({ id: currentUser.id || currentUser._id, ...formValues });
       setIsEditMode(false);
       Alert.alert("Success", "Profile updated!");
     } catch (err) {
-    console.error("Update failed:", err);  // 🔹 log actual error
+      console.error("Update failed:", err);
       Alert.alert("Error", "Update failed");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>User Details</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      {serverPhoto && (
+        <Image
+          source={{ uri: serverPhoto }}
+          style={styles.profileImage}
+        />
+      )}
 
-      {!isEditMode ? (
-        <>
-          <View style={styles.row}>
-            <Text style={styles.label}>Username:</Text>
-            <Text>{currentUser?.username || "N/A"}</Text>
-          </View>
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Username:</Text>
+        <TextInput
+          style={[styles.input]}
+          value={formValues.username}
+          onChangeText={(text) =>
+            setFormValues((prev) => ({ ...prev, username: text }))
+          }
+          editable={isEditMode}
+        />
+      </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Email:</Text>
-            <Text>{currentUser?.email || "N/A"}</Text>
-          </View>
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Email:</Text>
+        <TextInput
+          style={[styles.input]}
+          value={formValues.email}
+          onChangeText={(text) =>
+            setFormValues((prev) => ({ ...prev, email: text }))
+          }
+          editable={isEditMode}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </View>
 
-          <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-            <Text style={styles.buttonText}>Edit</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <View style={styles.row}>
-            <Text style={styles.label}>Username:</Text>
-            <View style={{ flex: 1 }}>
-              <TextInput
-                value={formValues.username}
-                onChangeText={(text) =>
-                  setFormValues((prev) => ({
-                    ...prev,
-                    username: text,
-                  }))
-                }
-                onBlur={() => handleBlur("username")}
-                style={[styles.input, isUsernameInvalid && styles.inputError]}
-              />
-              {isUsernameInvalid && (
-                <Text style={styles.error}>Username is required!</Text>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.row}>
-            <Text style={styles.label}>Email:</Text>
-            <View style={{ flex: 1 }}>
-              <TextInput
-                value={formValues.email}
-                onChangeText={(text) =>
-                  setFormValues((prev) => ({
-                    ...prev,
-                    email: text,
-                  }))
-                }
-                onBlur={() => handleBlur("email")}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={[styles.input, isEmailInvalid && styles.inputError]}
-              />
-              {isEmailInvalid && (
-                <Text style={styles.error}>Email is required!</Text>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.buttonRow}>
+      <View style={styles.buttonRow}>
+        {isEditMode ? (
+          <>
             <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={handleCancel}
-            >
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.saveButton}
+              style={[styles.button, styles.saveButton]}
               onPress={handleSave}
-              disabled={isUsernameInvalid || isEmailInvalid}
             >
               <Text style={styles.buttonText}>Save</Text>
             </TouchableOpacity>
-          </View>
-        </>
-      )}
-    </View>
+
+            <TouchableOpacity
+              style={[styles.button, styles.cancelButton]}
+              onPress={() => setIsEditMode(false)}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity
+            style={[styles.button, styles.editButton]}
+            onPress={() => setIsEditMode(true)}
+          >
+            <Text style={styles.buttonText}>Edit</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: "#fff",
+    alignItems: "center",
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
+  profileImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    marginBottom: 30,
+    borderWidth: 2,
+    borderColor: "#2196F3",
+  },
+  formGroup: {
+    width: "100%",
     marginBottom: 20,
-  },
-  row: {
-    marginBottom: 55,
   },
   label: {
     fontWeight: "600",
-    marginBottom: 5,
+    marginBottom: 8,
+    fontSize: 16,
   },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
-    padding: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 6,
-
-    paddingHorizontal: 10,
-    paddingVertical: 8, // smaller vertical padding
-    fontSize: 16, // explicit font size
-    height: 45, // ensures text fits
-
-    marginBottom: 18, // ✅ adds space below input
-    color: "#000", // ✅ ensures typed text is visible
-    backgroundColor: "#fff", // optional but safe
-  },
-  inputError: {
-    borderColor: "red",
-  },
-  error: {
-    color: "red",
-    marginTop: 5,
-  },
-  editButton: {
-    backgroundColor: "#4CAF50",
-    padding: 12,
-    borderRadius: 6,
-    marginTop: 20,
-  },
-  saveButton: {
-    backgroundColor: "#2196F3",
-    padding: 12,
-    borderRadius: 6,
-    flex: 1,
-    marginLeft: 5,
-  },
-  cancelButton: {
-    backgroundColor: "#999",
-    padding: 12,
-    borderRadius: 6,
-    flex: 1,
-    marginRight: 5,
+    fontSize: 16,
+    backgroundColor: "#f9f9f9",
+    color: "#000",
   },
   buttonRow: {
     flexDirection: "row",
+    width: "100%",
+    justifyContent: "center",
     marginTop: 20,
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  button: {
+    padding: 12,
+    borderRadius: 6,
+    alignItems: "center",
+    minWidth: 100,
+  },
+  editButton: {
+    backgroundColor: "#4CAF50",
+  },
+  saveButton: {
+    backgroundColor: "#2196F3",
+  },
+  cancelButton: {
+    backgroundColor: "#999",
   },
   buttonText: {
     color: "#fff",
-    textAlign: "center",
     fontWeight: "600",
+    fontSize: 16,
   },
 });
