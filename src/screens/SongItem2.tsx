@@ -14,41 +14,40 @@ interface SongItem2Props {
   variant?: "compact" | "full";
 }
 
-export const SongItem2: React.FC<SongItem2Props> = ({ song2 }) => {
+export const SongItem2: React.FC<SongItem2Props> = ({
+  song2,
+  variant = "compact",
+}) => {
   const openPreview = () => {
-    if (song2.preview) Linking.openURL(song2.preview);
+    if (song2?.preview) Linking.openURL(String(song2.preview));
   };
 
-  const openArtistLink = () => {
-    if (song2.artist.name) Linking.openURL(song2.artist.name);
-  };
+  const picture = String(song2?.artist?.picture || "https://via.placeholder.com/90");
+  const title = String(song2?.title || "Untitled");
+  const artist = String(song2?.artist?.name || "Unknown Artist");
+  const album = String(song2?.album || "Unknown Album");
+  const trackId = String(song2?.id || "");
 
   return (
     <View style={styles.card}>
-      {/* LEFT: Album Cover */}
-      <TouchableOpacity onPress={openArtistLink}>
-        <Image
-          source={{ uri: song2.artist.picture }}
-          style={styles.cover}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
+      <Image source={{ uri: picture }} style={styles.cover} />
 
-      {/* RIGHT: Song Info */}
       <View style={styles.info}>
-        <Text style={styles.title}>{song2.title}</Text>
+        <Text style={styles.title}>{title}</Text>
 
         <Text style={styles.meta}>
-          {song2.artist.name} • {song2.album}
+          {artist} • {album}
         </Text>
 
-        <Text style={styles.trackId}>Track ID: {song2.id}</Text>
+        {variant === "full" && (
+          <Text style={styles.trackId}>Track ID: {trackId}</Text>
+        )}
 
-        {song2.preview && (
+        {song2?.preview ? (
           <TouchableOpacity onPress={openPreview}>
             <Text style={styles.previewLink}>▶ Preview</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
     </View>
   );
