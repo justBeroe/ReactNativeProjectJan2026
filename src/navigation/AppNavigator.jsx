@@ -8,6 +8,7 @@ import { SongBoard2 } from "../screens/SongBoard2";
 import { RadioBoard } from "../screens/RadioBoard";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import CameraScreen from "../screens/CameraScreen";
+import ArtistScreen from "../screens/ArtistsScreen";
 
 
 export default function RootNavigator() {
@@ -28,11 +29,11 @@ export default function RootNavigator() {
       />
 
       <Tabs.Screen
-        name="Song"
-        component={SongBoard}
+        name="Artists"
+        component={ArtistScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="musical-note-outline" size={size} color={color} />
+            <Ionicons name="people-outline" size={size} color={color} />
           ),
         }}
       />
