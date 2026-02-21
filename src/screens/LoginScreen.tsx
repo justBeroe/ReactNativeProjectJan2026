@@ -18,14 +18,40 @@ export const LoginScreen: React.FC = () => {
   const [touchedEmail, setTouchedEmail] = useState(false);
   const [touchedPassword, setTouchedPassword] = useState(false);
 
-  const emailError = touchedEmail && !email;
-  const passwordError = touchedPassword && !password;
-  const isFormValid = email && password;
+  // =========================
+  // Validation Logic
+  // =========================
+
+  // ✅ NEW: Trimmed values (prevents spaces-only input)
+  const emailTrimmed = email.trim();
+  const passwordTrimmed = password.trim();
+
+  // ✅ NEW: Email regex validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // ✅ NEW: Actual validation checks (NOT dependent on touched)
+  const isEmailEmpty = emailTrimmed.length === 0;
+  const isEmailInvalid = !emailRegex.test(emailTrimmed);
+
+  const isPasswordEmpty = passwordTrimmed.length === 0;
+
+  // ✅ Error display (depends on touched)
+  const emailError =
+    touchedEmail && (isEmailEmpty || isEmailInvalid);
+
+  const passwordError =
+    touchedPassword && isPasswordEmpty;
+
+  // ✅ IMPORTANT: Form validity must NOT depend on touched
+  const isFormValid =
+    !isEmailEmpty &&
+    !isEmailInvalid &&
+    !isPasswordEmpty;
 
   const handleSubmit = async () => {
     if (!isFormValid) return;
 
-    const success = await login(email, password);
+    const success = await login(emailTrimmed, passwordTrimmed); // ✅ Use trimmed values
 
     if (success) {
       navigation.navigate("Home" as never);
@@ -38,15 +64,26 @@ export const LoginScreen: React.FC = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
 
+      {/* Email */}
       <TextInput
         style={[styles.input, emailError && styles.errorInput]}
         placeholder="Email"
+        keyboardType="email-address" // ✅ Better UX
+        autoCapitalize="none"        // ✅ Prevent capital letters
         value={email}
         onChangeText={setEmail}
         onBlur={() => setTouchedEmail(true)}
       />
-      {emailError && <Text style={styles.errorText}>Email is required!</Text>}
 
+      {emailError && (
+        <Text style={styles.errorText}>
+          {isEmailEmpty
+            ? "Email is required!"
+            : "Enter a valid email address!"}
+        </Text>
+      )}
+
+      {/* Password */}
       <TextInput
         style={[styles.input, passwordError && styles.errorInput]}
         placeholder="Password"
@@ -55,10 +92,14 @@ export const LoginScreen: React.FC = () => {
         onChangeText={setPassword}
         onBlur={() => setTouchedPassword(true)}
       />
+
       {passwordError && (
-        <Text style={styles.errorText}>Password is required!</Text>
+        <Text style={styles.errorText}>
+          Password is required!
+        </Text>
       )}
 
+      {/* Login Button */}
       <TouchableOpacity
         style={[styles.button, !isFormValid && styles.buttonDisabled]}
         onPress={handleSubmit}
@@ -70,7 +111,9 @@ export const LoginScreen: React.FC = () => {
       <TouchableOpacity
         onPress={() => navigation.navigate("Register" as never)}
       >
-        <Text style={styles.link}>Don't have an account? Register</Text>
+        <Text style={styles.link}>
+          Don't have an account? Register
+        </Text>
       </TouchableOpacity>
     </View>
   );

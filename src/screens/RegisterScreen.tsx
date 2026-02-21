@@ -29,24 +29,33 @@ export const RegisterScreen: React.FC = () => {
   // Validation helpers
   const noWhitespace = (value: string) => value.trim().length > 0;
 
-  const usernameError =
-    touchedUsername && (!username || !noWhitespace(username));
-  const emailError = touchedEmail && !email;
-  const passwordError =
-    touchedPassword && (!password || !noWhitespace(password));
-  const rePasswordError =
-    touchedRePassword && (!rePassword || !noWhitespace(rePassword));
+  // Always validate actual values
+  const isPasswordEmpty = !password || !noWhitespace(password);
+  const isPasswordTooShort = password.trim().length < 6;
+
+  const isRePasswordEmpty = !rePassword || !noWhitespace(rePassword);
   const passwordsMismatch = password !== rePassword;
 
+  // Show errors only after touch
+  const usernameError =
+    touchedUsername && (!username || !noWhitespace(username));
+
+  const emailError = touchedEmail && !email;
+
+  const passwordError =
+    touchedPassword && (isPasswordEmpty || isPasswordTooShort);
+
+  const rePasswordError = touchedRePassword && isRePasswordEmpty;
+
+  const passwordMismatchError = touchedRePassword && passwordsMismatch;
+
+  // ✅ IMPORTANT: Form validity must NOT depend on touched
   const isFormValid =
     username &&
     email &&
-    password &&
-    rePassword &&
-    !usernameError &&
-    !emailError &&
-    !passwordError &&
-    !rePasswordError &&
+    !isPasswordEmpty &&
+    !isPasswordTooShort &&
+    !isRePasswordEmpty &&
     !passwordsMismatch;
 
   const handleSubmit = async () => {
@@ -99,8 +108,15 @@ export const RegisterScreen: React.FC = () => {
         onChangeText={setPassword}
         onBlur={() => setTouchedPassword(true)}
       />
+
       {passwordError && (
-        <Text style={styles.errorText}>Password is required!</Text>
+        <Text style={styles.errorText}>
+          {isPasswordEmpty
+            ? "Password is required!"
+            : isPasswordTooShort
+              ? "Password must be at least 6 characters!"
+              : ""}
+        </Text>
       )}
 
       {/* Re-password */}
@@ -112,7 +128,8 @@ export const RegisterScreen: React.FC = () => {
         onChangeText={setRePassword}
         onBlur={() => setTouchedRePassword(true)}
       />
-      {passwordsMismatch && (
+
+      {passwordMismatchError && (
         <Text style={styles.errorText}>Passwords do not match!</Text>
       )}
 
