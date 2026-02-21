@@ -8,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  StyleSheet,
+  TouchableOpacity,
 } from "react-native";
 import { CameraView, useCameraPermissions, CameraType } from "expo-camera";
 import { useAuth } from "../core/services/AuthService";
@@ -17,12 +19,7 @@ export default function CameraScreen() {
   const { currentUser, refreshPicture, pictureVersion } = useAuth();
   const userId = currentUser?._id || currentUser?.id;
 
-  console.log("Current user:", currentUser); 
-  console.log("Using userId:", userId);
-
-  // ✅ CameraType is a TYPE, not a value → use string literals
   const [face, setFace] = useState<CameraType>("back");
-
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -32,8 +29,8 @@ export default function CameraScreen() {
 
   if (!userId)
     return (
-      <View style={{ marginTop: 100, alignItems: "center" }}>
-        <Text>No user logged in.</Text>
+      <View style={styles.centered}>
+        <Text style={styles.messageText}>No user logged in.</Text>
       </View>
     );
 
@@ -50,8 +47,6 @@ export default function CameraScreen() {
         type: "image/jpeg",
       } as any);
 
-      console.log("Uploading:", uri);
-
       const res = await fetch(`${SERVER_URL}/users/${userId}/picture`, {
         method: "PUT",
         headers: {
@@ -61,7 +56,6 @@ export default function CameraScreen() {
       });
 
       const serverResponse = await res.text();
-      console.log("Server response:", serverResponse);
 
       if (!res.ok) {
         Alert.alert("Upload failed", serverResponse);
@@ -75,7 +69,6 @@ export default function CameraScreen() {
       refreshPicture();
       Alert.alert("Success", "Photo uploaded!");
     } catch (err) {
-      console.error("Upload error:", err);
       Alert.alert("Error", "Upload failed");
     } finally {
       setUploading(false);
@@ -83,66 +76,164 @@ export default function CameraScreen() {
   };
 
   if (!permission)
-    return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
+    return (
+      <ActivityIndicator size="large" style={styles.loader} />
+    );
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
-      <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>
-        Camera Demo
-      </Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Camera for profile picture</Text>
 
       {!permission.granted ? (
-        <Button title="Grant Permission" onPress={requestPermission} />
+        <View style={styles.permissionContainer}>
+          <Button title="Grant Permission" onPress={requestPermission} />
+        </View>
       ) : (
         <>
           <CameraView
             ref={cameraRef}
-            style={{ width: 300, height: 400, marginBottom: 10 }}
-            facing={face} // ✅ string literal, type-safe
+            style={styles.camera}
+            facing={face}
           />
 
-          <Button
-            title="Take Picture"
-            onPress={async () => {
-              const photoData = await cameraRef.current?.takePictureAsync({
-                quality: 0.6,
-              });
-              if (photoData?.uri) setPhoto(photoData.uri);
-            }}
-          />
+          <View style={styles.buttonGroup}>
+            <Button
+              title="Take Picture"
+              onPress={async () => {
+                const photoData = await cameraRef.current?.takePictureAsync({
+                  quality: 0.6,
+                });
+                if (photoData?.uri) setPhoto(photoData.uri);
+              }}
+            />
 
-          <Button
-            title="Flip Camera"
-            onPress={() =>
-              setFace(face === "back" ? "front" : "back") // ✅ correct flip logic
-            }
-          />
+            <Button
+              title="Flip Camera"
+              onPress={() =>
+                setFace(face === "back" ? "front" : "back")
+              }
+            />
+          </View>
 
           {photo && (
-            <>
-              <Text>Preview:</Text>
+            <View style={styles.previewSection}>
+              <Text style={styles.subtitle}>Preview</Text>
+
               <Image
                 source={{ uri: photo }}
-                style={{ width: 200, height: 300, marginTop: 10 }}
+                style={styles.previewImage}
               />
-              <Button
-                title={uploading ? "Uploading..." : "Upload"}
+
+              <TouchableOpacity
+                style={[
+                  styles.uploadButton,
+                  uploading && styles.uploadButtonDisabled,
+                ]}
                 onPress={() => handleUpload(photo)}
                 disabled={uploading}
-              />
-            </>
+              >
+                <Text style={styles.uploadButtonText}>
+                  {uploading ? "Uploading..." : "Upload"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
 
-          <Text style={{ marginTop: 30 }}>Photo from server:</Text>
-          <Image
-            key={pictureVersion}
-            source={{
-              uri: `${SERVER_URL}/users/${userId}/picture?time=${pictureVersion}`,
-            }}
-            style={{ width: 200, height: 300, marginTop: 10 }}
-          />
+          <View style={styles.serverSection}>
+            <Text style={styles.subtitle}>Uploaded photo</Text>
+
+            <Image
+              key={pictureVersion}
+              source={{
+                uri: `${SERVER_URL}/users/${userId}/picture?time=${pictureVersion}`,
+              }}
+              style={styles.serverImage}
+            />
+          </View>
         </>
       )}
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    backgroundColor: "#f9f9f9",
+    flexGrow: 1,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loader: {
+    marginTop: 50,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  messageText: {
+    fontSize: 16,
+    color: "#444",
+  },
+  permissionContainer: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  camera: {
+    width: "100%",
+    height: 400,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 15,
+  },
+  buttonGroup: {
+    gap: 10,
+    marginBottom: 20,
+  },
+  previewSection: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  previewImage: {
+    width: 220,
+    height: 320,
+    borderRadius: 12,
+    marginVertical: 10,
+  },
+  uploadButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  uploadButtonDisabled: {
+    backgroundColor: "#9ec9ff",
+  },
+  uploadButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  serverSection: {
+    marginTop: 40,
+    alignItems: "center",
+  },
+  serverImage: {
+    width: 220,
+    height: 320,
+    borderRadius: 12,
+    marginTop: 10,
+  },
+});
