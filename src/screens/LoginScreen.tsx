@@ -36,40 +36,27 @@ export const LoginScreen: React.FC = () => {
   const isPasswordEmpty = passwordTrimmed.length === 0;
 
   // ✅ Error display (depends on touched)
-  const emailError = touchedEmail && (isEmailEmpty || isEmailInvalid);
+  const emailError =
+    touchedEmail && (isEmailEmpty || isEmailInvalid);
 
-  const passwordError = touchedPassword && isPasswordEmpty;
+  const passwordError =
+    touchedPassword && isPasswordEmpty;
 
   // ✅ IMPORTANT: Form validity must NOT depend on touched
-  const isFormValid = !isEmailEmpty && !isEmailInvalid && !isPasswordEmpty;
+  const isFormValid =
+    !isEmailEmpty &&
+    !isEmailInvalid &&
+    !isPasswordEmpty;
 
   const handleSubmit = async () => {
     if (!isFormValid) return;
 
-    //   const success = await login(emailTrimmed, passwordTrimmed); // ✅ Use trimmed values
+    const success = await login(emailTrimmed, passwordTrimmed); // ✅ Use trimmed values
 
-    //   if (success) {
-    //     navigation.navigate("Home" as never);
-    //   } else {
-    //     alert("Login failed - 401 Unauthorized");
-    //   }
-
-    try {
-      const success = await login(emailTrimmed, passwordTrimmed);
-
-      if (success) {
-        navigation.navigate("Home" as never);
-      } else {
-        alert("Login failed - Invalid email or password");
-      }
-    } catch (error: any) {
-      if (error.message === "Network Error") {
-        alert(
-          "Cannot connect to server. Check your backend or internet connection.",
-        );
-      } else {
-        alert("Something went wrong. Please try again.");
-      }
+    if (success) {
+      navigation.navigate("Home" as never);
+    } else {
+      alert("Login failed - 401 Unauthorized");
     }
   };
 
@@ -82,7 +69,7 @@ export const LoginScreen: React.FC = () => {
         style={[styles.input, emailError && styles.errorInput]}
         placeholder="Email"
         keyboardType="email-address" // ✅ Better UX
-        autoCapitalize="none" // ✅ Prevent capital letters
+        autoCapitalize="none"        // ✅ Prevent capital letters
         value={email}
         onChangeText={setEmail}
         onBlur={() => setTouchedEmail(true)}
@@ -90,7 +77,9 @@ export const LoginScreen: React.FC = () => {
 
       {emailError && (
         <Text style={styles.errorText}>
-          {isEmailEmpty ? "Email is required!" : "Enter a valid email address!"}
+          {isEmailEmpty
+            ? "Email is required!"
+            : "Enter a valid email address!"}
         </Text>
       )}
 
@@ -105,7 +94,9 @@ export const LoginScreen: React.FC = () => {
       />
 
       {passwordError && (
-        <Text style={styles.errorText}>Password is required!</Text>
+        <Text style={styles.errorText}>
+          Password is required!
+        </Text>
       )}
 
       {/* Login Button */}
@@ -120,7 +111,9 @@ export const LoginScreen: React.FC = () => {
       <TouchableOpacity
         onPress={() => navigation.navigate("Register" as never)}
       >
-        <Text style={styles.link}>Don't have an account? Register</Text>
+        <Text style={styles.link}>
+          Don't have an account? Register
+        </Text>
       </TouchableOpacity>
     </View>
   );

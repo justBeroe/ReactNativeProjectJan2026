@@ -24,7 +24,7 @@ export default function HomeScreen() {
   // 👇 FIXED: navigation now correctly typed
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
-  const { logout } = useAuth();
+  const { logout, currentUser } = useAuth();
 
   const categoryPressHandler = (categoryId: string) => {
     navigation.navigate("Category", { categoryId });
@@ -57,6 +57,11 @@ export default function HomeScreen() {
 
       <View style={styles.header}>
         <Text style={styles.songName}>Song shop</Text>
+
+        {/* ✅ Show logged in username */}
+        <Text style={styles.welcomeText}>
+          {currentUser ? `Welcome, ${currentUser.username} 👋` : "Welcome 👋"}
+        </Text>
 
         <View style={styles.headerInfo}>
           <Text style={styles.infoText}>⭐ Highest Rating</Text>
@@ -136,5 +141,11 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 24,
+  },
+  welcomeText: {
+    fontSize: 26,
+    color: "#890f0fff",
+    marginBottom: 16,
+    fontWeight: "500",
   },
 });
