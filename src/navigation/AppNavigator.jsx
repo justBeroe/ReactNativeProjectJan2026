@@ -9,6 +9,7 @@ import { RadioBoard } from "../screens/RadioBoard";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import CameraScreen from "../screens/CameraScreen";
 import ArtistScreen from "../screens/ArtistsScreen";
+import ArtistStackNavigator from "./ArtistStackNavigator";
 
 
 export default function RootNavigator() {
@@ -30,11 +31,12 @@ export default function RootNavigator() {
 
       <Tabs.Screen
         name="Artists"
-        component={ArtistScreen}
+        component={ArtistStackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people-outline" size={size} color={color} />
           ),
+          headerShown: false, // header comes from stack
         }}
       />
 

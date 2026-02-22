@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   Linking,
+  TouchableOpacity,
 } from "react-native";
 import type { Song } from "../models/song.model";
 import {
@@ -15,6 +16,8 @@ import {
   deleteSong,
   getSongsWithIDMongoDB,
 } from "../core/services/useSongs";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
+import type { ArtistStackParamList } from "../navigation/ArtistStackNavigator";
 
 interface ThemeItemProps {
   song: Song;
@@ -33,7 +36,13 @@ export const SongItem: React.FC<ThemeItemProps> = ({
   const [artistName, setArtistName] = useState(song.artist.name);
   const [albumTitle, setAlbumTitle] = useState(song.album.title);
 
-  // 🔊 Open preview stream externally (same as RadioItem)
+  const navigation = useNavigation<NavigationProp<ArtistStackParamList>>();
+
+  // Navigate to DetailsComponentSong
+  const handlePress = () => {
+    navigation.navigate("DetailsSong", { song });
+  };
+
   const openPreviewStream = () => {
     if (song.preview) {
       Linking.openURL(song.preview);
@@ -60,43 +69,37 @@ export const SongItem: React.FC<ThemeItemProps> = ({
   };
 
   const handleDelete = async () => {
-    Alert.alert(
-      "Confirm Delete",
-      "Are you sure you want to delete this song?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteSong(song._id);
-              onSongDeleted?.(song._id);
-            } catch (err) {
-              console.error("Delete failed", err);
-            }
-          },
+    Alert.alert("Confirm Delete", "Are you sure you want to delete this song?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteSong(song._id);
+            onSongDeleted?.(song._id);
+          } catch (err) {
+            console.error("Delete failed", err);
+          }
         },
-      ],
-    );
+      },
+    ]);
   };
 
   return (
     <View style={styles.container}>
       {!isEditMode ? (
-        <View style={styles.infoWrapper}>
+        <TouchableOpacity onPress={handlePress} activeOpacity={0.8}>
           <Text style={styles.title}>{song.title}</Text>
           <Text>Artist: {song.artist.name}</Text>
           <Text>Album: {song.album.title}</Text>
 
-          {/* 🔊 Open stream externally */}
           {song.preview && (
             <View style={{ marginVertical: 10 }}>
               <Button title="Open Preview Stream" onPress={openPreviewStream} />
             </View>
           )}
 
-          {/* Album Cover */}
           {song.album.cover && (
             <Image
               source={{ uri: song.album.cover }}
@@ -105,12 +108,7 @@ export const SongItem: React.FC<ThemeItemProps> = ({
           )}
 
           <Text>Artist ID: {song.artist.id}</Text>
-
-          <View style={styles.buttons}>
-            <Button title="Edit" onPress={() => setIsEditMode(true)} />
-            <Button title="Delete" onPress={handleDelete} color="red" />
-          </View>
-        </View>
+        </TouchableOpacity>
       ) : (
         <View>
           <Text>Artist Name:</Text>
@@ -119,7 +117,6 @@ export const SongItem: React.FC<ThemeItemProps> = ({
             onChangeText={setArtistName}
             style={styles.input}
           />
-
           <Text>Album Title:</Text>
           <TextInput
             value={albumTitle}
@@ -133,32 +130,21 @@ export const SongItem: React.FC<ThemeItemProps> = ({
           </View>
         </View>
       )}
+
+      {!isEditMode && (
+        <View style={styles.buttons}>
+          <Button title="Edit" onPress={() => setIsEditMode(true)} />
+          <Button title="Delete" onPress={handleDelete} color="red" />
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    marginBottom: 16,
-    backgroundColor: "#f8f8f8",
-    borderRadius: 8,
-  },
+  container: { padding: 16, marginBottom: 16, backgroundColor: "#f8f8f8", borderRadius: 8 },
+  title: { fontSize: 20, fontWeight: "bold" },
+  input: { borderWidth: 1, borderColor: "#ccc", padding: 8, marginVertical: 6, borderRadius: 4 },
+  buttons: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
   infoWrapper: {},
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 8,
-    marginVertical: 6,
-    borderRadius: 4,
-  },
-  buttons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-  },
 });
