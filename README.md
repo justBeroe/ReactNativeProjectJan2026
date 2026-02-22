@@ -5,6 +5,8 @@
 
 **Link to APK:** https://github.com/justBeroe/ReactNativeProjectJan2026/releases/download/1/songShopDT.apk
 
+**How to start app**: Download the .apk file and install it on your Android device. Open the app, register a new account or log in with existing credentials to explore the music application features.
+
 📱 **ReactNativeProjectJan2026**  
 🎓 **React Native – Exam Project**  
 🎵 **Category:** Music Application  
