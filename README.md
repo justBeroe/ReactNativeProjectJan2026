@@ -4,6 +4,8 @@
 🚀 **How to download .apk file**:  
 [Download APK](https://github.com/justBeroe/ReactNativeProjectJan2026/releases/download/1/songShopDT.apk)
 
+**Link to APK:** https://github.com/justBeroe/ReactNativeProjectJan2026/releases/download/1/songShopDT.apk
+
 📱 **ReactNativeProjectJan2026**  
 🎓 **React Native – Exam Project**  
 🎵 **Category:** Music Application  
