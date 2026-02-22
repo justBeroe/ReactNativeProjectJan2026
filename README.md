@@ -1,8 +1,7 @@
 # ReactNativeProjectJan2026
 
 
-🚀 **How to download .apk file**:  
-[Download APK](https://github.com/justBeroe/ReactNativeProjectJan2026/releases/download/1/songShopDT.apk)
+🚀 **How to download .apk file**:  [Download APK](https://github.com/justBeroe/ReactNativeProjectJan2026/releases/download/1/songShopDT.apk)
 
 **Link to APK:** https://github.com/justBeroe/ReactNativeProjectJan2026/releases/download/1/songShopDT.apk
 
